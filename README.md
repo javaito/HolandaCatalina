@@ -45,7 +45,7 @@ Como se puede ver hablamos en varias ocasiones de la "Layers Publicadas" por que
 Una de las características fundamentales que se buscan con este concepto de arquitectura es el de lograr una alta cohesión y un bajo acoplamiento entre todos estos componentes inclusive en ambientes distribuidos. El hecho de definir **Layer Interfaces**, **Layers** y **Layers Reporsitory** está totalmente apuntado a poder lograr este objetivo, debido a que el concepto de layer está directamente asociado al patrón [strategy](https://en.wikipedia.org/wiki/Strategy_pattern)
 
 ![Strategy pattern](https://github.com/javaito/HolandaCatalina/raw/main/images/Strategy.png)
-En el siguiente fragmento de código podemos ver una posible uso del  patrón el cual no es muy escalable pero ejemplifica la cualidades de usar estrategias, en ese fragmento de código podemos ver como usando un parámetro podríamos cambiar el resultado final del renderizado de la imagen.
+En el siguiente fragmento de código podemos ver una posible uso del  patrón, el cual no es muy escalable ni de mucha utilidad, pero ejemplifica la cualidades de usar estrategias. En ese fragmento de código podemos ver como usando un parámetro podríamos cambiar el resultado final del renderizado de la imagen.
 
 ``` java 
 public void render(String outputType, byte[] image) {
@@ -60,17 +60,39 @@ public void render(String outputType, byte[] image) {
 }
 ```
 
-Este patrón particularmente se caracteriza por dar una mejor escalabilidad, reutilización y mantenimiento de los algoritmos asociados a un estrategia, haciendo posible mantener una familia de algoritmos con características similares a una misma interfaz. 
-Entonces, el concepto de layers lleva este patrón a otro nivel, extendiendo la capacidad de escalabilidad y mantenimientos brindando la posibilidad de que cada uno de las implementaciones sean independientes del lenguaje y posiblemente estén distribuidas en distintos servicios en un mismo cluster. Debido a que los layers están definidos en términos de un estándar como los es [bson](http://bsonspec.org/), podemos pensar que hacer una llamada remota desde cualquier lenguaje a la implementación de esta en otro lenguaje debería implementarse con una comunicación TCP que permita intercambiar mensajes basados en el mismo estándar, por lo que en la siguiente sección se describe un protocolo de comunicación basado en [bson](http://bsonspec.org/) con este fin.
+Este patrón particularmente se caracteriza por dar una mejor escalabilidad, reutilización y mantenimiento de los algoritmos asociados a un estrategia, haciendo posible mantener una familia de algoritmos con características similares asociados a una misma interfaz. 
+Entonces, el concepto de layers lleva este patrón a otro nivel, extendiendo la capacidad de escalabilidad y mantenimientos brindando la posibilidad de que cada uno de las implementaciones sean independientes del lenguaje y posiblemente estén distribuidas en distintos servicios en un mismo cluster. 
+Acá se puede ver  una posible implementación del ejemplo anterior usando los componentes propuesto en donde as simple vista se ve la mejora en la implemantación ya que al usar un repositorio de layer indexados podemos hacer que esta implementación escale sin modificar el código del contexto donde se usa.
+``` java 
+public void render(String outputType, byte[] image) {
+	//Layers es la implementación del patrón singleton donde se almacenan todos los layer publicados
+	//Esta llamada pide una implementacion del layer interface llamado renderer y el nombre de la 
+	//implementación es el parámetro de entrada al metodo.
+	Renderer renderer = Layers.get("Renderer", outputType);
+	renderer.render(image);
+}
+```
+
+Debido a que los layers están definidos en términos de un estándar como los es [bson](http://bsonspec.org/), podemos pensar que hacer una llamada remota desde cualquier lenguaje a la implementación de esta en otro lenguaje debería implementarse con una comunicación TCP que permita intercambiar mensajes basados en el mismo estándar, por lo que en la siguiente sección se describe un protocolo de comunicación basado en [bson](http://bsonspec.org/) con este fin.
 Habiendo definido muchos conceptos y tomando la libertad de pensar en el hecho de hacer que un layer este en forma remota podemos pensar también en el concepto de **Servicio** al que vamos a definir como: *un conjunto de layers que implementa algunas interfaces, publicadas en la red en una dirección y puertos específicos*. Está definición nos permite pensar que un servicio es un subconjunto de los layers publicados en un instancia del framework corriendo que están publicados y son accesibles mediante un protocolo para ser usados desde otra instancia del framework.
 
 ### Polimorfismo distribuido
 Otro importante y casi fundamental concepto de la programación orientada a objetos es el [polimorfismo](https://en.wikipedia.org/wiki/Polymorphism_%28computer_science%29), por lo que esta claro que no lo vamos a dejar al margen en esta especificación. Para dar un poco de contexto a la explicación vamos a describir de forma simplificada el concepto de polimorfismo asociado a la programación orientada a objetos. 
-Entonces el polimorfismo *es la propiedad de los lenguajes orientados a objetos que permite enviar mensajes, sintácticamente idénticos a [objetos](https://en.wikipedia.org/wiki/Object_%28computer_science%29)  de distintas [clase](https://en.wikipedia.org/wiki/Class_%28computer_programming%29) siempre y cuando el objeto sepa cómo responder al mensaje que se le va a enviar.*
-El polimorfismo genera un gran cantidad de propiedades muy útiles a lo hora de modelar soluciones en lenguajes de programación orientada a objetos, pero en la que vamos a centrar la posibilidad que genera de tener un mismo puntero al cual podemos asignar distintos tipos de objetos, justamente este es una de las propiedades que nos permite tener una bajo acoplamiento dentro de nuestras soluciones. 
-Ahora combinando, el concepto de servicio explicado anteriormente junto con el polimorfismo podemos pensar en abstraernos de saber una variable asignada está haciendo referencia a una implementación local o remota debido a que la interfaz que implementan es la misma, por lo que nos permite pensar en un polimorfismo distribuido. Personalmente creo que es muy valiosa esta herramienta ya que nos da la posibilidad de pensar soluciones completas totalmente desacopladas y sin la necesidad de pensar si cada una de las partes de la solución son locales o remotas y si la implementación está correctamente desarrollada debería ser ajena al problema que queremos solucionar la problemática de la comunicación entre estos servicios.
-Cuando hacemos referencia a una buena implementación de este polimorfismo distribuido es por que se entiende que todo lo referido a la comunicación subyacente necesaria para que esto se pueda lograr debe ser totalmente transparente al usuario del polimorfismo, para lograr esto se podría hacer una implementación basada en el patrón [proxy](https://en.wikipedia.org/wiki/Proxy_pattern), donde la implementación que intercepta la llamada debería ser la que hacer realmente la llamada por la red y devolver el resultado sin hacer que se note esta capa.
 
+Entonces el **polimorfismo** *es la propiedad de los lenguajes orientados a objetos que permite enviar mensajes, sintácticamente idénticos a [objetos](https://en.wikipedia.org/wiki/Object_%28computer_science%29)  de distintas [clase](https://en.wikipedia.org/wiki/Class_%28computer_programming%29) siempre y cuando el objeto sepa cómo responder al mensaje que se le va a enviar.*
+
+El polimorfismo genera un gran cantidad de propiedades muy útiles a lo hora de modelar soluciones en lenguajes de programación orientada a objetos, pero en la que vamos a centrar la posibilidad que genera de tener un mismo puntero al cual podemos asignar distintos tipos de objetos, justamente este es una de las propiedades que nos permite tener una bajo acoplamiento dentro de nuestras soluciones. Se puede entender lo importante de esta propiedad en la siguiente linea del ejemplo de la sección anterior
+``` java 
+Renderer renderer = Layers.get("Renderer", outputType);
+```
+Acá se puede ver, que lo único que sabemos es que el repositorio nos va a devolver la implementación de un renderer pero no sabemos ningún detalle de suimplementación por lo que es sumamente importante poder tener este tipo de punteros.
+
+Ahora combinando, el concepto de servicio explicado anteriormente junto con el polimorfismo podemos pensar en abstraernos de saber si una variable asignada está haciendo referencia a una implementación local o remota, debido a que la interfaz que implementan es la misma, por lo que nos permite pensar en un polimorfismo distribuido. 
+Se entiende lo valioso esta herramienta ya que nos da la posibilidad de pensar soluciones completas totalmente desacopladas y sin la necesidad de preocuparnos por la posibilidad de que algunas implementaciones de la solución sean locales o remotas. Una implementación correctamente desarrollada debería proveer una implementación mas al repositorio de layers mientras que mantiene totalmente oculto los mecanismos y la problemática de la comunicación entre estos servicios.
+
+Cuando hacemos referencia a una buena implementación de este polimorfismo distribuido es por que se entiende que todo lo referido a la comunicación subyacente necesaria para que esto se pueda lograr debe ser totalmente transparente al usuario del polimorfismo, para lograr esto se podría hacer una implementación basada en el patrón [proxy](https://en.wikipedia.org/wiki/Proxy_pattern), donde la implementación que intercepta la llamada debería ser la que hacer realmente la llamada por la red y devolver el resultado sin hacer que se note esta capa.
+![Strategy pattern](https://github.com/javaito/HolandaCatalina/raw/main/images/Distributed.png)
+Como se puede ver en el diagrama de secuencia tanto la llamada local como remota para el contexto donde se están usando las distintas implementaciones, son totalmente identicas.
 
 
 ### Comunicación binaria asincrónica

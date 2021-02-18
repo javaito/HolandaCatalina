@@ -4,7 +4,7 @@
 
 ## Holanda Catalina
 
-Con la experiencia, con el nacimiento de nuevos patrones para la arquitectura del software y la construcción de equipos para ser escalables en capacidades computacionales y en recursos humanos, y la motivación de acercar la nuevas herramientas cloud a cualquier equipo de desarrollo de software, es que comencé con el a pensar en forma abstracta en cada una de las buenas prácticas asociadas a la programación orientada a objetos, para tratar de combinarlas con las nuevas tecnologías.
+Con la experiencia, con el nacimiento de nuevos patrones para la arquitectura del software y la construcción de equipos para ser escalables en capacidades computacionales y en recursos humanos, y la motivación de acercar la nuevas herramientas cloud a cualquier equipo de desarrollo de software, es que comencé a pensar en forma abstracta en cada una de las buenas prácticas asociadas a la programación orientada a objetos, para tratar de combinarlas con las nuevas tecnologías.
 
 De esta combinación es que surge la idea de ***Holanda Catalina*** a la que defino cómo: *un conjunto de reglas y estándares que combinados generan un framework independiente del lenguaje e implementación, que brinda las siguientes características:*
 
@@ -80,11 +80,18 @@ Ahora combinando, el concepto de servicio explicado anteriormente junto con el p
 Se entiende lo valioso esta herramienta ya que nos da la posibilidad de pensar soluciones completas totalmente desacopladas y sin la necesidad de preocuparnos por la posibilidad de que algunas implementaciones de la solución sean locales o remotas. Una implementación correctamente desarrollada debería proveer una implementación mas al repositorio de layers mientras que mantiene totalmente oculto los mecanismos y la problemática de la comunicación entre estos servicios.
 
 Cuando hacemos referencia a una buena implementación de este polimorfismo distribuido es por que se entiende que todo lo referido a la comunicación subyacente necesaria para que esto se pueda lograr debe ser totalmente transparente al usuario del polimorfismo, para lograr esto se podría hacer una implementación basada en el patrón [proxy](https://en.wikipedia.org/wiki/Proxy_pattern), donde la implementación que intercepta la llamada debería ser la que hacer realmente la llamada por la red y devolver el resultado sin hacer que se note esta capa.
-![Strategy pattern](https://github.com/javaito/HolandaCatalina/raw/main/images/Distributed.png)
-Como se puede ver en el diagrama de secuencia tanto la llamada local como remota para el contexto donde se están usando las distintas implementaciones, son totalmente identicas.
+![Distributed Layer](https://github.com/javaito/HolandaCatalina/raw/main/images/Distributed.png)
+Como se puede ver en el diagrama de secuencia tanto la llamada local como remota para el contexto donde se están usando las distintas implementaciones, son totalmente idénticas.
 
 ### Comunicación binaria asincrónica
+En esta sección vamos a describir un mecanismo de comunicación basada en mensajes, binaria utilizando [bson](http://bsonspec.org/) para la serialización y desserialización del payload de cada uno de los mensajes, y de caracter asincrono.
 
+Como mencioné anteriormente la comunicación esta basada en mensajes, por lo que inicialmente vamos a definir el concepto de mensaje y cuales son los requicitos mínimos para una implementación.
 
+ **Mensajes**
+Antes de especificar el conjunto de mensajes necesarios para la comunicación entre servicios, y debido a que existen algunos atributos necesarios para todos los mensajes que se intercambien, podemos pensar en un super tipo del cual heredan cada uno de los mensajes al cual llamaremos **Message**.
+Vamos a enumerar y describir los requicitos mínimos de un mensaje, siemre respetando los tipos de datos soportados el estándard [bson](http://bsonspec.org/)
+ - id (UUID): Identificador único del mensaje que se ha generado, con este elemento podemos identificar al mensaje de cualquier otro mensaje y podemos mantener la trazabilidad del mismo.
+ -  timestamp (entero 8 bytes): Valor del [Unix Time](https://en.wikipedia.org/wiki/Unix_time) con presición de milisegundos del momento exacto cuando se creo el mensaje.
 
 ### Manejo de evento distribuidos

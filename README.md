@@ -44,7 +44,21 @@ Como se puede ver hablamos en varias ocasiones de la "Layers Publicadas" por que
 ### Generalización del patrón Strategy, Servicios
 Una de las características fundamentales que se buscan con este concepto de arquitectura es el de lograr una alta cohesión y un bajo acoplamiento entre todos estos componentes inclusive en ambientes distribuidos. El hecho de definir **Layer Interfaces**, **Layers** y **Layers Reporsitory** está totalmente apuntado a poder lograr este objetivo, debido a que el concepto de layer está directamente asociado al patrón [strategy](https://en.wikipedia.org/wiki/Strategy_pattern)
 
-![Strategy pattern](https://raw.githubusercontent.com/javaito/HolandaCatalina/main/images/Strategy.svg)
+![Strategy pattern](https://github.com/javaito/HolandaCatalina/raw/main/images/Strategy.png)
+En el siguiente fragmento de código podemos ver una posible uso del  patrón el cual no es muy escalable pero ejemplifica la cualidades de usar estrategias, en ese fragmento de código podemos ver como usando un parámetro podríamos cambiar el resultado final del renderizado de la imagen.
+
+``` java 
+public void render(String outputType, byte[] image) {
+	Renderer renderer;
+	switch(outputType) {
+		case "PNG": renderer = new PngRenderer(); break;
+		case "TIFF" : renderer = new TiffRenderer(); break;
+	}
+	if(renderer != null) {
+		renderer.render(image);
+	}
+}
+```
 
 Este patrón particularmente se caracteriza por dar una mejor escalabilidad, reutilización y mantenimiento de los algoritmos asociados a un estrategia, haciendo posible mantener una familia de algoritmos con características similares a una misma interfaz. 
 Entonces, el concepto de layers lleva este patrón a otro nivel, extendiendo la capacidad de escalabilidad y mantenimientos brindando la posibilidad de que cada uno de las implementaciones sean independientes del lenguaje y posiblemente estén distribuidas en distintos servicios en un mismo cluster. Debido a que los layers están definidos en términos de un estándar como los es [bson](http://bsonspec.org/), podemos pensar que hacer una llamada remota desde cualquier lenguaje a la implementación de esta en otro lenguaje debería implementarse con una comunicación TCP que permita intercambiar mensajes basados en el mismo estándar, por lo que en la siguiente sección se describe un protocolo de comunicación basado en [bson](http://bsonspec.org/) con este fin.

@@ -91,7 +91,28 @@ Como mencioné anteriormente la comunicación esta basada en mensajes, por lo qu
  **Mensajes**
 Antes de especificar el conjunto de mensajes necesarios para la comunicación entre servicios, y debido a que existen algunos atributos necesarios para todos los mensajes que se intercambien, podemos pensar en un super tipo del cual heredan cada uno de los mensajes al cual llamaremos **Message**.
 Vamos a enumerar y describir los requicitos mínimos de un mensaje, siemre respetando los tipos de datos soportados el estándard [bson](http://bsonspec.org/)
- - id (UUID): Identificador único del mensaje que se ha generado, con este elemento podemos identificar al mensaje de cualquier otro mensaje y podemos mantener la trazabilidad del mismo.
+ - id (UUID): Identificador único del mensaje que se ha generado, con este elemento podemos identificar al mensaje de cualquier otro mensaje y podemos mantener la trazabilidad del mismo. La única excepción, es en el caso especial de mensajes de respuesta el cual tiene el mismo id que el mensaje que origina la respuesta, esto se explica con detalle mas adelante.
  -  timestamp (entero 8 bytes): Valor del [Unix Time](https://en.wikipedia.org/wiki/Unix_time) con presición de milisegundos del momento exacto cuando se creo el mensaje.
+ - originData (Document): Este documento es el payload del mensaje, donde el que origina el mensaje puede mandar un documento con toda la información necesaria para cumplir el proposito de su comunicación.
+ - sessionId (UUID): Identificador de la session que genero el mensaje, al usar este campo se supone que el receptor del mensaje es capaz de reconstruir la sesion que generó el mensaje a partir de este identificador.
+ - sessionBean (Document): Documento donde se serializa todos los atributos que forman parte de la sesión que geneeró el mensaje para que del lado que se recibe el mensaje no se tenga que reconstruir esta información.
+
+Como se puede ver entre los atributos del mensaje existen; sessionId y sessionBean. La idea es que solo se envíe uno de estos dos elementos en cada mensaje pero no debería existir un mensaje que no tenga ninguno de los dos, debido a que siempre tenemos que poder identificar la sesión que ha generado el mensaje.
+
+Como está en la descripción de la sección, la comunicación que planteamos debe ser siempre asincronica, mas allá de que se entiende que existen muchos casos de uso en donde se requiere que al comunicarme con un servicio devuelva una respuesta y sin ella no se puede continuar, o sea en forma sincrónica. Entonces vamos a emular este tipo de comportamiento al momento de hacer una llamada utilizando un esquema de listeners y timeouts para emular una respuesta sincrónica. Para poder plantear esta solución necesitamos primero definir un subtipo de mensaje que representa la respuesta a un mensaje enviado.
+
+**Response Message**
+Como ya dijimos es un subtipo de mensaje que solo agrega dos atributos a los que se mencionaron anteriormente en la definición de un mensaje, y por otro lado tiene la particularidad de que el id del mensaje de respuesta es el mismo id del mensaje que generó esa respuesta, por lo que en este único caso dos mensajes pueden tener el mismo id.
+
+ - value (indefinido): en este campo del mensaje de respuesta se coloca la información que se quiere enviar como respuesta al mensaje que lo generó, como se puede ver el tipo de datos es indefinido, lo que significa que puede enviarse un valor con cualquiera de los tipos soportados en el estándar  [bson](http://bsonspec.org/) inclusive un valor nulo.
+ - throwable (indefinido): cuando el mensaje generá un error en el servicio remoto y se quiere retornar un error como respuesta enviamos la información del error en este campo.
+
+Entonces para emular una comunicación sincrónica para el que este tratando de enviar mensajes vamos hacer uso de una listener de la siguiente forma. 
+
+![Asyncronous Communication](https://github.com/javaito/HolandaCatalina/raw/main/images/AsynchronousCommunication.png)
+En el diagrama anterior se puede ver cómo el uso de un listener deje una espera no activa hasta que llegue otro mensaje o se cumpla el timeout, pero para el contexto donde se está usando una llamada se emula un comportamiento sincrónico, de acá se despender que la implementación para una llamada asincronica no requiere ningún tipo de listener ya que al contexto no le importa tener una respuesta de esa llamada.
+
+
 
 ### Manejo de evento distribuidos
+

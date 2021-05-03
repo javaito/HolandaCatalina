@@ -1,9 +1,22 @@
-## Contenido
-- [Layers](#layers)
 
-## Holanda Catalina
 
-Por mi experiencia, por el nacimiento de nuevos patrones para la arquitectura del software y la construcción de equipos para ser escalables en capacidades computacionales y en recursos humanos, y la motivación de acercar la nuevas herramientas cloud a cualquier equipo de desarrollo de software. Y además convencido de que algunos de los conceptos y patrones asociados a la programación orientada a objetos logran generar soluciones basadas en muchas capas de abstracción que van ocultando los detalles de las distintas implementaciones y que uno de los objetivos principales del diseño orientado a objetos es lograr soluciones con alta cohesión y bajo acoplamiento, es que comencé a pensar la mejor forma de combinar estas buenas prácticas con el casi infinito conjunto de herramientas que provee el concepto de cloud.
+## Contenidos
+
+1. [Introducción](#introduccion)
+2. [Holanda Catalina](#holandaCatalina)
+	- [Layers, Repositorio de implementaciones](#layers)
+	- [Generalización del patrón Strategy, Servicios](#servicios)
+	- [Polimorfismo distribuido](#polimorfismo)
+	- [Comunicación binaria asincrónica](#comunicacion)
+	- [Manejo de evento distribuidos](#eventos)
+2. [No son micro-servicios](#noMicroservicios)
+
+
+## Introducción <a name="introduccion"></a>
+
+## Holanda Catalina <a name="holandaCatalina"></a>
+
+Por mi experiencia, por el nacimiento de nuevos patrones para la arquitectura del software, para lograr que la inmensa cantidad de herramienta que proveen los entornos cloud sean accesible en forma natural por los equipos de desarrollo y además convencido de que algunos de los conceptos y patrones asociados a la programación orientada a objetos logran generar soluciones basadas capas de abstracción que van ocultando los detalles de las distintas implementaciones y que uno de los objetivos principales del diseño orientado a objetos es lograr soluciones con alta cohesión y bajo acoplamiento, es que comencé a pensar la mejor forma de combinar estas buenas prácticas con el casi infinito conjunto de herramientas que provee el concepto de cloud.
 
 De esta combinación es que surge la idea de ***Holanda Catalina*** a la que defino cómo: *un conjunto de reglas y estándares que combinados generan un framework independiente del lenguaje e implementación, que brinda las siguientes características:*
 
@@ -13,12 +26,12 @@ De esta combinación es que surge la idea de ***Holanda Catalina*** a la que def
  - Comunicación binaria y asincrónica
  - Manejo de eventos distribuidos
 
-Entonces me gusta entender a ***Holanda Catalina***, como un proyecto de investigación basado en muchos experimentos puntuales que le dieron un marco teórico a la implementación de todas las ideas que surgieron de estos experimentos, ya que como amante de código que soy, lo primero que hice fue sentarme a codificar :(...
-Con esto quiero decir que este documento creció junto con su primera implementación ([Holanda Catalina Java Framewrok](https://github.com/javaito/HolandaCatalinaFw)) en forma conjunta y cada para fue alimentado al otra continuamente.
+Me gusta ver este proceso como un proyecto de investigación basado en muchos experimentos puntuales que le dieron un marco teórico a la implementación de todas las ideas que surgieron de estos experimentos, ya que como amante de código que soy, lo primero que hice fue sentarme a codificar :(...
+Así fue como este documento creció junto con su primera implementación ([Holanda Catalina Java Framewrok](https://github.com/javaito/HolandaCatalinaFw)) en forma conjunta y cada parte fue alimentado al otra continuamente.
 
 ### Layers, Repositorio de implementaciones <a name="layers"></a>
-La idea de este framework comienza con un concepto simple, que es muy aplicado en la programación orientada a objetos, es la implementación de una [interfaz](https://en.wikipedia.org/wiki/Protocol_%28object-oriented_programming%29) y por otro lado la aplicación de un patrón del diseño, el patrón [Singleton](https://en.wikipedia.org/wiki/Singleton_pattern) el cual básicamente restringe el número de instancias de una clase a uno. 
-Entonces mas allá del amplio concepto de interfaces en el mundo de la programación orientada a objetos, en este caso vamos a limitar el uso de interfaces solamente para la definición de un conjunto de **métodos** agrupados por el **tipo** de la interfaz. Cada uno de estos métodos debe cumplir con las siguientes características:
+La idea de este framework comienza con un par de conceptos simples, muy aplicado en la programación orientada a objetos, uno es la implementación de una [interfaz](https://en.wikipedia.org/wiki/Protocol_%28object-oriented_programming%29) y por otro lado la aplicación de un patrón del diseño, el patrón [Singleton](https://en.wikipedia.org/wiki/Singleton_pattern) el cual básicamente restringe el número de instancias de una clase a uno. 
+Entonces, mas allá del amplio concepto de interfaces en el mundo de la programación orientada a objetos, en este caso vamos a limitar el uso de interfaces solamente para la definición de un conjunto de **métodos** agrupados por el **tipo** de la interfaz. Cada uno de estos métodos debe cumplir con las siguientes características:
 
  - Tiene que tener un nombre.
  - Devolver un valor tipado como resultado de su ejecución, este valor puede ser vacío.
@@ -32,7 +45,7 @@ Teniendo en claro el concepto de Layer, podemos incluir el concepto de [Singleto
 
 Como se puede ver hablamos en varias ocasiones de la "Layers Publicadas" por que hay que dajar claro que el repositorio de layers debe tener un mecanismo explicito para la publicación de las layers de tal forma que se pueda controlar cual es el conjunto de implementaciones para un entorno especifico. Habrán notado que se repite la idea de un ambiente definido, esto se debe a que necesitamos darle un marco no infinito a alcance que tiene la publicación de los layers ya sea que es para una sola computadora en donde va a funcionar el código o para un conjunto de computadoras que tendrán conciencia de que existen layers distribuidos.
 
-### Generalización del patrón Strategy, Servicios
+### Generalización del patrón Strategy, Servicios <a name="servicios"></a>
 Una de las características fundamentales que se buscan con este concepto de arquitectura es el de lograr una alta cohesión y un bajo acoplamiento, como se mencionó anteriormente, entre todos estos componentes inclusive en ambientes distribuidos. El hecho de definir **Layer Interfaces**, **Layers** y **Layers Reporsitory** tiene como propósito poder lograr este objetivo, debido a que el concepto de layer está directamente asociado al patrón [strategy](https://en.wikipedia.org/wiki/Strategy_pattern) y no es casualidad ya que para mi es uno de los patrones que mas representan y ayudan al bajo acoplamiento entre los componentes y su alta cohesión.
 En el siguiente diagrama de clases se representa la estructura del patrón strategy.
 
@@ -72,7 +85,7 @@ Debido a que los layers están definidos en términos de un estándar como los e
 
 Habiendo definido muchos conceptos y tomando la libertad de pensar en el hecho de hacer que un layer este en forma remota podemos pensar también en el concepto de **Servicio** al que vamos a definir como: *un conjunto de layers que implementa algunas interfaces, publicadas en la red en una dirección y puertos específicos*. Está definición nos permite pensar que un servicio es un subconjunto de los layers publicados en un instancia del framework corriendo que están publicados y son accesibles mediante un protocolo para ser usados desde otra instancia del framework.
 
-### Polimorfismo distribuido
+### Polimorfismo distribuido <a name="polimorfismo"></a>
 Otro importante y casi fundamental concepto de la programación orientada a objetos es el [polimorfismo](https://en.wikipedia.org/wiki/Polymorphism_%28computer_science%29), por lo que esta claro que no lo vamos a dejar al margen en esta especificación. Para dar un poco de contexto a la explicación vamos a describir de forma simplificada el concepto de polimorfismo asociado a la programación orientada a objetos. 
 
 Entonces el **polimorfismo** *es la propiedad de los lenguajes orientados a objetos que permite enviar mensajes, sintácticamente idénticos a [objetos](https://en.wikipedia.org/wiki/Object_%28computer_science%29)  de distintas [clase](https://en.wikipedia.org/wiki/Class_%28computer_programming%29) siempre y cuando el objeto sepa cómo responder al mensaje que se le va a enviar.*
@@ -90,7 +103,7 @@ Cuando hacemos referencia a una correcta implementación de este polimorfismo en
 ![Distributed Layer](https://github.com/javaito/HolandaCatalina/raw/main/images/Distributed.png)
 Como se puede ver en el diagrama de secuencia tanto la llamada local como remota para el contexto donde se están usando las distintas implementaciones, son totalmente idénticas.
 
-### Comunicación binaria asincrónica
+### Comunicación binaria asincrónica <a name="comunicacion"></a>
 En esta sección vamos a describir un mecanismo de comunicación basada en mensajes, binaria utilizando [bson](http://bsonspec.org/) para la serialización y desserialización del payload de cada uno de los mensajes, y de caracter asincrono.
 Es muy importante entender que este protocolo de comunicación debe ser lo mas inmutable posible. Con inmutable nos referimos a que tanto la estructura de los mensajes como los mecanismos para serializar y des-serializar se mantengan en el tiempo. Obviamente esto es algo que no se puede mantener eternamente por lo que en caso de que se tenga que realizar cambios en alguna de las estructuras o en alguno de los mecanismos, es obligatorio mantener la compatibilidad hacia atrás con versiones anteriores.
 Todos los detalles que tienen que ver con la necesidad de lograr un muy bajo porcentaje de cambios en el protocolo y su compatibilidad hacia atrás, tienen que ver con la alta posibilidad de que en un entorno productivo usando esta tecnología, coexistan distintas versiones de una implementación de la especificación lo que hace necesarios que el protocolo sea el mismo o mantenga la compatibilidad.
@@ -133,7 +146,9 @@ Debido a que el caso de uso es tan importante para la implementación vamos a de
 
 Queda claro que se necesita un menaje de respuesta para saber que la invocación fue correcta por mas que la implementación a la que se esta llamado no tenga una respuesta concreta, es necesario saber que la llamada se hizo.
 
-### Manejo de evento distribuidos
+### Manejo de evento distribuidos <a name="eventos"></a>
+
+## No son micro-servicios <a name="noMicroservicios"></a>
 
 
 

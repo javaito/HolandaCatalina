@@ -3,16 +3,34 @@
 ## Contenidos
 
 1. [Introducción](#introduccion)
+	 - [Un poco de historia](#historia)
+	 - [Los problemas](#problemas)
 2. [Holanda Catalina](#holandaCatalina)
 	- [Layers, Repositorio de implementaciones](#layers)
 	- [Generalización del patrón Strategy, Servicios](#servicios)
 	- [Polimorfismo distribuido](#polimorfismo)
 	- [Comunicación binaria asincrónica](#comunicacion)
 	- [Manejo de evento distribuidos](#eventos)
-2. [No son micro-servicios](#noMicroservicios)
+	- [Auto-descubrimiento del entorno](#autodescubrimiento)
+3. [No son micro-servicios](#noMicroservicios)
 
 
 ## Introducción <a name="introduccion"></a>
+Para comenzar con la descripción de la idea, quiero dar algún contexto al desarrollo de este documento y poder expresar el conjunto de problemas que motivaron la idea de crear algo distinto, que por supuesto cumple con mis expectativas, y hoy cuenta con una implementación la cual está siendo usada como software de base para una plataforma productiva ([Sitrack.io](https://app.sitrack.io/)), mientras que las ideas de arquitectura que se describen en este documento son las que se usaron para construir esa misma plataforma.
+
+### Un poco de historia <a name="historia"></a>
+Cuando comencé a trabajar en [Sitrack](https://www.sitrack.com), año 2008, algunas de mis tareas tenían que ver con la re-estructuración de muchos de los sub-sistemas que ya estaban productivos en la empresa. Sitrack, que en ese entonces se dedicaba casi exclusivamente al seguimiento, control de vehículos e iniciando con el agregado de valor y capas de personalización para cada uno de los clientes, ya posicionada en todo latino américa y en pleno crecimiento. 
+Creo personalmente que las empresas de las denominadas [AVL](https://es.wikipedia.org/wiki/Rastreo_vehicular_automatizado), fueron el punta pie inicial a lo que hoy conocemos como [IOT](https://es.wikipedia.org/wiki/Internet_de_las_cosas) y creo que la mayoría evoluciona en este sentido. Bueno justo en el momento en el que esta evolución se estaba dando en todo el mundo yo comenzaba a trabajar en una de las empresas que necesitaba evolucionar así que tuve la oportunidad de aprender y equivocarme mucho en ese proceso. Parte de esta evolución exigía mucho a la tecnología y los sistemas de información en términos de escalabilidad, flexibilidad y velocidad. 
+Junto a esta evolución vivíamos el nacimiento de lo que ahora denominamos [cloud computing](https://es.wikipedia.org/wiki/Computaci%C3%B3n_en_la_nube), donde los gigantes de la tecnología comenzaron a brindar todo tipo de servicios tecnológicos bajo demanda, por lo que ahora se ponía al alcance de muchas empresas lo último en tecnología.
+
+### Los problemas <a name="problemas"></a>
+Si bien todas las experiencias dejaron un aprendizaje y crecimiento profesional, quisiera enfocarme en uno de los casos de uso que mas tuvo que ver con el desarrollo de esta idea. Este caso de uso puntual se podría resumir como: *la administración de las conexiones asociadas a cada uno de los equipos remotos y la homogeneización de los datos que cada uno de ellos enviaba.*
+Para aclara un poco esa definición, el software tenía que administrar miles de conexiones TCP activas sobre la que cada uno de los móviles controlados enviaban la información, y dependiendo del tipo, modelo y marca del equipo instalado en el móvil era el protocolo que usaba para el envío de información. Debido a que el tipo, modelo y maraca de los equipos no era (ni es...) una decisión tecnológica sino una financiera, teníamos una cantidad y variedad de equipos muy heterogénea y con un crecimiento diario.
+Como dije inicialmente, este sub-sistema y su complejidad dieron lugar al conjunto de problemas por el cual inicié el camino de tratar de solucionarlos.
+
+ - **Escala:** El número de equipos que se conectaban a la plataforma crecía continuamente y está claro que cada uno de ellos requería de recursos computacionales para ser atendidos. Por este motivo es que la tecnología a utilizar para el problema de la escale debe ser capaz de utilizar grupos de computadoras en forma colaborativa entendiendo que el conjunto puede crecer en cualquier momento. (Servicios...  ヽ(°〇°)ﾉ). Está claro que una sola computadora siempre va a tener recursos limitados por que esta característica es fundamental.
+ - **Conocimiento del entorno:** Algunos de los casos de uso asociados a este sub-sistema comenzaban en una computadora y terminaban en otra, por lo que era necesario coordinar los recursos de estas computadoras para que viera como un solo gran hardware que permitía la implementación de estos casos de uso. 
+ - **Es todo parecido, pero no igual:**  Este sub-sistema en particular tiene un flujo de alto nivel idéntico para cualquiera de los equipos, pero sus particularidades varían en detalles de las distintas implementaciones, lo que permite ver una arquitectura bien definida sin tener que pensar el los detalles de las implementaciones necesarias para soportar lo que puede llegar a ser una nueva integración en el futuro.
 
 ## Holanda Catalina <a name="holandaCatalina"></a>
 
@@ -25,6 +43,7 @@ De esta combinación es que surge la idea de ***Holanda Catalina*** a la que def
  - Polimorfismo distribuido
  - Comunicación binaria y asincrónica
  - Manejo de eventos distribuidos
+ - Auto-descubrimiento del entorno
 
 Me gusta ver este proceso como un proyecto de investigación basado en muchos experimentos puntuales que le dieron un marco teórico a la implementación de todas las ideas que surgieron de estos experimentos, ya que como amante de código que soy, lo primero que hice fue sentarme a codificar :(...
 Así fue como este documento creció junto con su primera implementación ([Holanda Catalina Java Framewrok](https://github.com/javaito/HolandaCatalinaFw)) en forma conjunta y cada parte fue alimentado al otra continuamente.
@@ -147,6 +166,8 @@ Debido a que el caso de uso es tan importante para la implementación vamos a de
 Queda claro que se necesita un menaje de respuesta para saber que la invocación fue correcta por mas que la implementación a la que se esta llamado no tenga una respuesta concreta, es necesario saber que la llamada se hizo.
 
 ### Manejo de evento distribuidos <a name="eventos"></a>
+
+### Auto-descubrimiento del entorno <a name="autodescubrimiento"></a>
 
 ## No son micro-servicios <a name="noMicroservicios"></a>
 
